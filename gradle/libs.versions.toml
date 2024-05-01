@@ -1,0 +1,37 @@
+[versions]
+jackson = "2.17.0"
+logback = "1.5.6"
+logback-logstash = "7.4"
+mockk = "1.13.10"
+junit5= "5.10.2"
+slf4j = "2.0.12"
+jakarta-servlet = "6.0.0"
+spring-boot-plugin = "3.2.2"
+spring-dependency-management = "1.1.4"
+
+[libraries]
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-logstash = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logback-logstash" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+
+spring-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
+spring-web = { module = "org.springframework:spring-web" }
+spring-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
+jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api", version.ref = "jakarta-servlet" }
+
+[bundles]
+jackson = ["jackson-databind", "jackson-module-kotlin", "jackson-datatype-jsr310", "jackson-annotations"]
+logback = ["logback-classic", "logback-logstash"]
+spring = ["spring-autoconfigure", "spring-web"]
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot-plugin" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }

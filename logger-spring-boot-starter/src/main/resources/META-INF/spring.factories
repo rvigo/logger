@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.rvigo.logger.boot.starter.SetupCorrelationIdFilterAutoConfiguration,\
+com.rvigo.logger.boot.starter.ServletLoggerAutoConfiguration
