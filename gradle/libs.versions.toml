@@ -3,11 +3,13 @@ jackson = "2.17.0"
 logback = "1.5.6"
 logback-logstash = "7.4"
 mockk = "1.13.10"
-junit5= "5.10.2"
+junit5 = "5.10.2"
 slf4j = "2.0.12"
 jakarta-servlet = "6.0.0"
 spring-boot-plugin = "3.2.2"
 spring-dependency-management = "1.1.4"
+spring-cloud = "3.1.1"
+sqs-sdk = "1.12.720"
 
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
@@ -24,13 +26,19 @@ jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.re
 spring-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
 spring-web = { module = "org.springframework:spring-web" }
 spring-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-mvc = { module = " org.springframework:spring-webmvc" }
+
+spring-sqs = { module = "io.awspring.cloud:spring-cloud-aws-dependencies", version.ref = "spring-cloud" }
+spring-aws-dependencies = { module = "io.awspring.cloud:spring-cloud-aws-starter-sqs", version.ref = "spring-cloud" }
 
 jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api", version.ref = "jakarta-servlet" }
+sqs-sdk = { module = "com.amazonaws:aws-java-sdk-sqs", version.ref = "sqs-sdk" }
 
 [bundles]
 jackson = ["jackson-databind", "jackson-module-kotlin", "jackson-datatype-jsr310", "jackson-annotations"]
 logback = ["logback-classic", "logback-logstash"]
-spring = ["spring-autoconfigure", "spring-web"]
+spring = ["spring-autoconfigure", "spring-web", "spring-sqs", "spring-aws-dependencies"]
+spring-test = ["spring-test", "spring-mvc"]
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot-plugin" }

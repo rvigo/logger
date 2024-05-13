@@ -1,2 +1,2 @@
-com.rvigo.logger.boot.starter.SetupCorrelationIdFilterAutoConfiguration
-com.rvigo.logger.boot.starter.ServletLoggerAutoConfiguration
+com.rvigo.logger.boot.starter.autoconfiguration.SetupCorrelationIdFilterAutoConfiguration
+com.rvigo.logger.boot.starter.autoconfiguration.ServletLoggerAutoConfiguration

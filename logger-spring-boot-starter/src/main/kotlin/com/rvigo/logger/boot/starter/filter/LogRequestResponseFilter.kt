@@ -56,7 +56,6 @@ class LogRequestResponseFilter(private val excludePaths: List<String>) : OncePer
         }
     }
 
-
     private fun getRequestBody(request: ContentCachingRequestWrapper): String = String(request.contentAsByteArray)
 
     private fun getRequestUrlParameters(request: ContentCachingRequestWrapper): String =

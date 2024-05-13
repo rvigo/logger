@@ -7,12 +7,19 @@ plugins {
     kotlin("jvm")
 }
 
+ext["jackson.version"] = "2.17.0"
+
 dependencies {
     api(project(":logger-core"))
+
     implementation(libs.bundles.spring)
     implementation(libs.jakarta.servlet.api)
 
-    testImplementation(libs.spring.test)
+    implementation(libs.sqs.sdk)
+
+    testImplementation(libs.bundles.spring.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.bundles.jackson)
 }
 
 java {

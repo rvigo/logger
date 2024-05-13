@@ -17,41 +17,39 @@ private const val CORRELATION_ID = "correlationId"
 private const val TAGS = "tags"
 private const val DATA = "data"
 
-private val defaultObjectMapper: ObjectMapper = jacksonObjectMapper()
-    .registerKotlinModule()
-    .registerModule(JavaTimeModule())
-    .apply {
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
-        configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
-        configure(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS, true)
-        configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true)
-    }
-    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
+private val defaultObjectMapper: ObjectMapper by lazy {
+    jacksonObjectMapper()
+        .registerKotlinModule()
+        .registerModule(JavaTimeModule())
+        .apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
+            configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
+            configure(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS, true)
+            configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true)
+        }
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
+}
 
 inline fun <reified T> T.logger(): Logger = LoggerFactory.getLogger(T::class.java)
 
-fun Logger.getCorrelationId(): String = MDC.get(CORRELATION_ID) ?: run {
-    val correlationId = UUID.randomUUID().toString()
-    MDC.put(CORRELATION_ID, correlationId)
-    correlationId
-}
+fun Logger.getCorrelationId(): String? = MDC.get(CORRELATION_ID)
 
 fun Logger.setCorrelationId(correlationId: String) = MDC.put(CORRELATION_ID, correlationId)
+
+fun Logger.setCorrelationId(correlationId: UUID) = setCorrelationId(correlationId.toString())
+
+fun Logger.clearCorrelationId() = MDC.remove(CORRELATION_ID)
+
+fun Logger.clearTags() = MDC.remove(TAGS)
 
 fun Logger.appendTag(pair: Pair<String, String>) = appendTags(mapOf(pair))
 
 fun Logger.appendTags(map: Map<String, String>) {
     val newMap = appendTagsMap(map)
     MDC.put(TAGS, defaultObjectMapper.writeValueAsString(newMap))
-}
-
-private fun appendTagsMap(map: Map<String, String>): Map<String, String> {
-    val old = MDC.get(TAGS) ?: "{}"
-    val oldMap = defaultObjectMapper.readValue<Map<String, String>>(old)
-    return oldMap + map
 }
 
 fun Logger.t(message: String) = this.trace(message)
@@ -118,27 +116,25 @@ fun Logger.error(
     message: () -> String
 ) = tryWithCause(data, tags, message, cause, ::error)
 
+private fun appendTagsMap(map: Map<String, String>): Map<String, String> {
+    val old = MDC.get(TAGS) ?: "{}"
+    val oldMap = defaultObjectMapper.readValue<Map<String, String>>(old)
+    return oldMap + map
+}
+
 private fun <T> tryWith(
     data: Any?,
     tags: Map<String, String>?,
     message: () -> String,
     wrapped: (String) -> T
-) {
+) = restoreTags {
     val closeables = MDCCloseables()
-    data?.let {
-        closeables.add(DATA, defaultObjectMapper.writeValueAsString(it))
-    }
-    val current = MDC.get(TAGS) ?: "{}"
-    tags?.let {
-        val newMap = appendTagsMap(it)
-        closeables.add(TAGS, defaultObjectMapper.writeValueAsString(newMap))
-    }
+        .setupFromTags(tags)
+        .setupFromData(data)
 
     closeables.use {
         wrapped(message())
     }
-    // restore previous tags
-    MDC.put(TAGS, current)
 }
 
 private fun <T> tryWithCause(
@@ -147,21 +143,33 @@ private fun <T> tryWithCause(
     message: () -> String,
     cause: Throwable?,
     wrapped: (String, Throwable?) -> T
-) {
+) = restoreTags {
     val closeables = MDCCloseables()
-    data?.let {
-        closeables.add(DATA, defaultObjectMapper.writeValueAsString(it))
-    }
-    val current = MDC.get(TAGS) ?: "{}"
-    tags?.let {
-        val newMap = appendTagsMap(it)
-        closeables.add(TAGS, defaultObjectMapper.writeValueAsString(newMap))
-    }
+        .setupFromTags(tags)
+        .setupFromData(data)
 
     closeables.use {
         wrapped(message(), cause)
     }
+}
 
-    // restore previous tags
+private fun MDCCloseables.setupFromData(data: Any?): MDCCloseables {
+    data?.let {
+        this.add(DATA, defaultObjectMapper.writeValueAsString(it))
+    }
+    return this
+}
+
+private fun MDCCloseables.setupFromTags(tags: Map<String, String>?): MDCCloseables {
+    tags?.let {
+        val newMap = appendTagsMap(it)
+        this.add(TAGS, defaultObjectMapper.writeValueAsString(newMap))
+    }
+    return this
+}
+
+private fun restoreTags(block: () -> Unit) {
+    val current = MDC.get(TAGS) ?: "{}"
+    block()
     MDC.put(TAGS, current)
 }
